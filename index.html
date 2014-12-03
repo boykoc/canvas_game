@@ -1,0 +1,432 @@
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>HTML5 Canvas Game</title>
+
+    <style type="text/css">
+    * {
+            -webkit-user-select: none;
+        }
+        #gameboard {
+            /*background: url("images/background-city.jpg") repeat scroll 0 0 rgba(0, 0, 0, 0);*/
+            /*border: 8px solid #cfcfcf;            
+            box-shadow: 0 0 15px grey;
+            display: block;
+            margin: 2em auto;*/
+            width: 100%;
+            height: 100%;
+        }
+        body {
+            background: #efefef;
+            font-size: 1.5em;
+            font-family: Arial;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .container {
+            margin: 0 auto;
+            display: block;
+            width: 800px;
+        }
+
+        p.container {
+            margin-top: 1em;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 0;
+            right: 0;     
+            left: 0;
+            margin: 0 auto ;   
+            width: 165px;  
+            height: 4.5em  
+        }
+
+        .controls button {
+            width: 5em;
+            height: 5em;
+            position: absolute;
+            -webkit-appearance:none;
+        }
+
+        #arrow-up {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+        }
+
+        #arrow-right {
+            bottom: 2em;
+            position: absolute;
+            right: 0;
+        }
+
+        #arrow-down {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+        }
+
+        #arrow-left {
+            position: absolute;
+            left: 0;
+            bottom: 2em;
+        }
+    </style>
+</head>
+<body>
+    <!--<h1 class="container">Beat the Demand</h1>
+    <p class="container">The demand for new energy is always increasing. Collect enough TWhs to keep the people, and their demand, happy.</p>
+	<p class="container">Use the keyboard arrows to collect the energy. Press Enter to Start.</p>-->
+    <canvas id="gameboard">Sorry, if you're seeing this you need a newer browser to play.</canvas>
+    <aside class="controls">
+        <button id="arrow-up">&#8679;</button>
+        <button id="arrow-right">&#8680;</button>
+        <button id="arrow-down">&#8681;</button>
+        <button id="arrow-left">&#8678;</button>
+    </aside>
+    <script type="text/javascript">
+
+        
+        /**
+         * [init description]
+         * @return {[type]} [description]
+         */
+      
+        function init() {            
+            //if (13 in keysDown) { 
+                
+                    paint();
+             
+           // }
+
+        }
+        
+        
+        setInterval(init, 10);  // redraw every 10ms
+
+
+        /***************************************************************************
+         * Variables and Basic Settings
+         **************************************************************************/
+
+        var gameboard = document.getElementById("gameboard");  // get canvas element
+        var context = gameboard.getContext('2d');  // create context to draw in
+
+        gameboard.width = window.innerWidth;  // set width and height
+        gameboard.height = window.innerHeight;
+
+        var stop = false;
+        var game = {
+            level: 1,
+            difficulty: ''
+        };
+
+        var player1 = {  // create temp player
+            x: 200,
+            y: 200,
+            width: 25, 
+            height: 25,
+            speed: 5, // px per second
+            color: '#000',
+            score: 0
+        };
+
+        var enemy1 = {  // block coming down the screen
+            x: 0,
+            y: 0, 
+            //width: 600,
+            width: gameboard.width,
+            height: 5,
+            color: '#000',
+            speed: 0.1, 
+            speedBase: 0.1,
+            state: 'Off-Peak'
+        };        
+
+        var enemyRandom = {            
+            width: 25,
+            height: 25,
+            x: Math.round( Math.random()*(gameboard.width + 1) ), 
+            y: Math.round( Math.random()*(gameboard.height + 1) ),
+            color: '#ff0', 
+            type: '',
+            value: 1
+        };
+
+        var keysDown = {}; // object for keyPress events
+
+
+        var backgroundImageReady = false;
+        var backgroundImage = new Image();
+        backgroundImage.onload = function() {
+            backgroundImageReady = true;
+        };
+        backgroundImage.src = "images/background-city.jpg";
+
+        var enemyRandomImageReady = false;
+        var enemyRandomImage = new Image();
+        enemyRandomImage.onload = function() {
+            enemyRandomImageReady = true;
+        };
+        enemyRandomImage.src = "images/energy-icon.jpg";
+
+        var player1ImageReady = false;
+        var player1Image = new Image();
+        enemyRandomImage.onload = function() {
+            player1ImageReady = true;
+        };
+        player1Image.src = "images/person-icon.png";
+
+
+        /***************************************************************************
+         * Event Listeners
+         **************************************************************************/
+
+        /* Register Event Listenvers for keydown and keyup */ 
+
+        window.addEventListener("keydown", function(e) {
+            keysDown[e.keyCode] = true;
+        });
+
+        window.addEventListener("keyup", function(e){
+            if(e.keyCode !== 13) {
+                delete keysDown[e.keyCode];
+            }
+        });
+
+        window.addEventListener("touchstart", function(e) {
+            e.preventDefault();
+        });
+
+        document.getElementById('arrow-up').addEventListener("touchstart", function() {            
+            keysDown[38] = true;
+            movePlayer();
+        }, false);
+
+        document.getElementById('arrow-up').addEventListener("touchend", function() {
+            delete keysDown[38];
+            movePlayer();
+        }, false);
+
+
+        document.getElementById('arrow-right').addEventListener("touchstart", function() {
+            keysDown[39] = true;
+            movePlayer();
+        }, false);
+
+        document.getElementById('arrow-right').addEventListener("touchend", function() {
+            delete keysDown[39];
+            movePlayer();
+        }, false);
+
+        document.getElementById('arrow-down').addEventListener("touchstart", function() {
+            keysDown[40] = true;
+            movePlayer();
+        }, false);
+
+        document.getElementById('arrow-down').addEventListener("touchend", function() {
+            delete keysDown[40];
+            movePlayer();
+        }, false);
+
+        document.getElementById('arrow-left').addEventListener("touchstart", function() {
+            keysDown[37] = true;
+            movePlayer();
+        }, false);
+
+        document.getElementById('arrow-left').addEventListener("touchend", function() {
+            delete keysDown[37];
+            movePlayer();
+        }, false);
+
+
+        
+window.addEventListener("resize", OnResizeCalled, false);
+
+function OnResizeCalled() {
+    gameboard.width = window.innerWidth;
+    gameboard.height = window.innerHeight;
+    gameboard.style.width = window.innerWidth + 'px';
+    gameboard.style.height = window.innerHeight + 'px';
+}
+
+        /***************************************************************************
+         * Main Game Functions 
+         **************************************************************************/
+
+
+        /**
+         * [paint description]
+         * @return {[type]} [description]
+         */
+        function paint() {            
+            movePlayer();      
+            moveEnemy(); 
+            checkBounderies(enemyRandom);
+            
+            //context.fillStyle = "#fff";
+            context.strokeStyle = "#000";            
+            context.fillRect(0,0,gameboard.width, gameboard.height);
+            //context.strokeRect(0,0,gameboard.width, gameboard.height);
+            if(backgroundImageReady) {
+                context.drawImage(backgroundImage, 0, 0, gameboard.width, gameboard.height);
+            }
+            /*context.fillStyle = player1.color;
+            context.fillRect(player1.x, player1.y, player1.width, player1.height); // initial starting point for player1*/
+
+            if(player1.y <= enemy1.height) {                 
+                context.fillStyle = "rgb(250, 250, 250)";
+                context.font = "42px Helvetica";
+                context.textAlign = "left";
+                context.textBaseline = "top";           
+                context.fillText("Game Over", 190, 250);    
+                gameOver(); 
+            }
+
+            if(player1ImageReady) {
+                context.drawImage(player1Image, player1.x, player1.y);
+            }
+            createEnemy();   
+            createRandomEnemies();         
+            context.fillStyle = "rgb(250, 250, 250)";
+            context.font = "18px Helvetica";
+            context.textAlign = "left";
+            context.textBaseline = "top";
+            context.fillText("Time-Of-Use: " + enemy1.state, 32, 32);
+            context.fillText("TWhs: " + player1.score + " /20", 32, 10);
+            context.fillText("Level: " + game.level, 300, 10);
+        }
+
+
+        
+
+        /**
+         * [movePlayer description]
+         * @return {[type]} [description]
+         */
+        function movePlayer() {
+            if (37 in keysDown) { //left
+                player1.x -= player1.speed;
+            }
+            if (38 in keysDown) { //up
+                player1.y -= player1.speed;
+            }
+            if (39 in keysDown) { //right
+                player1.x += player1.speed;
+            }
+            if (40 in keysDown) { //down
+                player1.y += player1.speed;
+            }
+            areTheyTouching();
+            checkBounderies(player1);
+            
+        }
+        
+        /**
+         * [checkBounderies description]
+         * @return {[type]} [description]
+         */
+        function checkBounderies(thing) {
+            if (thing.x >= gameboard.width - thing.width) {
+                thing.x = gameboard.width - thing.width;
+            }
+            if (thing.x <= 0) {
+                thing.x = 0;
+            }
+            if (thing.y >= gameboard.height - thing.height) {
+                thing.y = gameboard.height - thing.height;
+            }
+            if(thing.y <= 0) {
+                thing.y = 0;
+            }
+        }
+
+        function createEnemy() {
+            context.fillStyle = enemy1.color;
+            context.fillRect(enemy1.x, enemy1.y, enemy1.width, enemy1.height);   
+        }
+
+        function moveEnemy() {
+            enemy1.height += enemy1.speed;   
+        }
+
+        function gameOver() { 
+            console.log(keysDown);
+
+                delete keysDown["13"];
+                player1.x = 300;
+                player1.y = 300;
+                enemy1.height = 0;
+                enemy1.speed = 0.1;
+                enemy1.speedBase = 0.1;
+                player1.score = 0;
+                game.level = 1;
+                
+                //init();  
+                
+        }
+
+        function nextLevel() {
+            player1.x = 300;
+            player1.y = 300;
+            player1.score = 0;
+            enemy1.height = 0;
+            game.level += 1;
+            enemy1.speedBase = enemy1.speedBase * 1.25;
+            enemy1.speed = enemy1.speedBase; 
+            enemy1.state = "Off-Peak";         
+        }
+
+        function createRandomEnemies() {
+            /*context.fillStyle = enemyRandom.color;
+            context.fillRect(enemyRandom.x, enemyRandom.y, enemyRandom.width, enemyRandom.height); */
+
+            if(backgroundImageReady) {
+                context.drawImage(enemyRandomImage, enemyRandom.x, enemyRandom.y);
+            }
+
+        }
+
+        function areTheyTouching() {
+            if(
+                ( (player1.x+player1.width) >= enemyRandom.x ) && ( player1.x <= (enemyRandom.x+enemyRandom.width) ) &&
+                ( (player1.y+player1.height) >= enemyRandom.y ) && ( player1.y <= (enemyRandom.y+enemyRandom.height) ) 
+              ) {
+                enemyRandom.x = Math.round( Math.random()*(gameboard.width -24) );
+                enemyRandom.y = Math.floor(Math.random()*(gameboard.height-enemy1.height-24)+enemy1.height);    
+                enemy1.height -= 5; // on touch reduce enemy height
+                player1.score += 2;
+                if (player1.score == 20) { // TODO: make this display you win
+                    nextLevel();                    
+                }
+            }
+        } 
+
+        function adjustEnemySpeed() {
+            if(enemy1.speed == enemy1.speedBase) {
+                enemy1.speed = enemy1.speedBase * 2;
+                enemy1.state = "Peak";
+            } else {
+                enemy1.speed = enemy1.speedBase;
+                enemy1.state = "Off-Peak";
+            }
+        }
+        setInterval(adjustEnemySpeed, 20000); // every 20 seconds 
+
+
+        
+
+
+    </script>
+</body>
+</html>
+
