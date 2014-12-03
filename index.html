@@ -50,7 +50,7 @@
             width: 5em;
             height: 5em;
             position: absolute;
-            -webkit-appearance:none;
+            -webkit-appearance: none;
         }
 
         #arrow-up {
@@ -87,12 +87,12 @@
     <p class="container">The demand for new energy is always increasing. Collect enough TWhs to keep the people, and their demand, happy.</p>
 	<p class="container">Use the keyboard arrows to collect the energy. Press Enter to Start.</p>-->
     <canvas id="gameboard">Sorry, if you're seeing this you need a newer browser to play.</canvas>
-    <aside class="controls">
+    <!-- <aside class="controls">
         <button id="arrow-up">&#8679;</button>
         <button id="arrow-right">&#8680;</button>
         <button id="arrow-down">&#8681;</button>
         <button id="arrow-left">&#8678;</button>
-    </aside>
+    </aside> -->
     <script type="text/javascript">
 
         
@@ -192,6 +192,19 @@
          **************************************************************************/
 
         /* Register Event Listenvers for keydown and keyup */ 
+
+        window.addEventListener("touchmove", function(e) {
+            e.preventDefault();
+            var eventTouch = e.changedTouches[0];
+
+            var x = eventTouch.pageX - gameboard.offsetLeft;
+            var y = eventTouch.pageY - gameboard.offsetTop;
+            player1.x = x;
+            player1.y = y;
+            console.log(x, y);
+        });
+
+
 
         window.addEventListener("keydown", function(e) {
             keysDown[e.keyCode] = true;
