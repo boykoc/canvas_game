@@ -15,6 +15,7 @@
             box-shadow: 0 0 15px grey;
             display: block;
             margin: 2em auto;*/
+            background: #5B8F2A;
             width: 100%;
             height: 100%;
         }
@@ -34,6 +35,30 @@
 
         p.container {
             margin-top: 1em;
+        }
+
+        span.small {
+            font-size: .7em;
+        }
+
+        .game-over {
+            margin: 0 auto;
+            display: block;
+            height: 4em;
+            background: #8e44ad;
+            border-radius: 5px;
+            box-shadow: 0px 2px 2px rgba(0,0,0,0.2);
+            border: none;
+            color: white;
+            font-size: 1em;
+            padding: 1em;
+            text-shadow: 0px 3px black;
+        }
+
+        .wrapper {
+            position: absolute;
+            top: 40%;
+            width: 100%;
         }
 
         .controls {
@@ -93,6 +118,9 @@
         <button id="arrow-down">&#8681;</button>
         <button id="arrow-left">&#8678;</button>
     </aside> -->
+    <div class="wrapper">
+        <button id="game-over" class="game-over">Start Playing</button>
+    </div>
     <script type="text/javascript">
 
         
@@ -102,11 +130,11 @@
          */
       
         function init() {            
-            //if (13 in keysDown) { 
+            if (13 in keysDown) { 
                 
                     paint();
              
-           // }
+           }
 
         }
         
@@ -120,7 +148,8 @@
 
         var gameboard = document.getElementById("gameboard");  // get canvas element
         var context = gameboard.getContext('2d');  // create context to draw in
-
+        var x, y;
+        var highestLevel = 1;
         gameboard.width = window.innerWidth;  // set width and height
         gameboard.height = window.innerHeight;
 
@@ -196,12 +225,13 @@
         window.addEventListener("touchmove", function(e) {
             e.preventDefault();
             var eventTouch = e.changedTouches[0];
-
-            var x = eventTouch.pageX - gameboard.offsetLeft;
-            var y = eventTouch.pageY - gameboard.offsetTop;
+            if(keysDown[13] == true) {
+            x = eventTouch.pageX - gameboard.offsetLeft;
+            y = eventTouch.pageY - gameboard.offsetTop;
             player1.x = x;
-            player1.y = y;
-            console.log(x, y);
+            player1.y = y - player1.height;
+        }
+           // console.log(x, y);
         });
 
 
@@ -216,11 +246,11 @@
             }
         });
 
-        window.addEventListener("touchstart", function(e) {
+       /* window.addEventListener("touchstart", function(e) {
             e.preventDefault();
-        });
+        });*/
 
-        document.getElementById('arrow-up').addEventListener("touchstart", function() {            
+        /*document.getElementById('arrow-up').addEventListener("touchstart", function() {            
             keysDown[38] = true;
             movePlayer();
         }, false);
@@ -259,8 +289,15 @@
         document.getElementById('arrow-left').addEventListener("touchend", function() {
             delete keysDown[37];
             movePlayer();
-        }, false);
+        }, false);*/
 
+        document.getElementById('game-over').addEventListener("click", function() {
+            keysDown[13] = true;
+            document.getElementById('game-over').style.display = "none";
+            console.log("button clicked " + x, y);
+
+            
+        });
 
         
 window.addEventListener("resize", OnResizeCalled, false);
@@ -297,11 +334,11 @@ function OnResizeCalled() {
             context.fillRect(player1.x, player1.y, player1.width, player1.height); // initial starting point for player1*/
 
             if(player1.y <= enemy1.height) {                 
-                context.fillStyle = "rgb(250, 250, 250)";
+                /*context.fillStyle = "rgb(250, 250, 250)";
                 context.font = "42px Helvetica";
                 context.textAlign = "left";
                 context.textBaseline = "top";           
-                context.fillText("Game Over", 190, 250);    
+                context.fillText("Game Over", 190, 250);  */  
                 gameOver(); 
             }
 
@@ -373,15 +410,25 @@ function OnResizeCalled() {
         }
 
         function gameOver() { 
-            console.log(keysDown);
 
-                delete keysDown["13"];
+            console.log("game over: " + keysDown);
+            delete keysDown["13"];
+            if (game.level > highestLevel) {
+                    highestLevel = game.level;
+                }
+            document.getElementById('game-over').innerHTML = "<span class='small'>Best level: "+ highestLevel +" </span><br>Play Again";
+            document.getElementById('game-over').style.display = "block";
+                
                 player1.x = 300;
                 player1.y = 300;
+                x = 300;
+                y = 300;
+                console.log(x, y);
                 enemy1.height = 0;
                 enemy1.speed = 0.1;
                 enemy1.speedBase = 0.1;
                 player1.score = 0;
+                
                 game.level = 1;
                 
                 //init();  
